@@ -12,7 +12,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Azayaka. If not, see <https://www.gnu.org/licenses/>.
-
+#include "core/serial/serial_device_network.hpp"
 #include "core/serial/serial.hpp"
 #include "core/gameboy.hpp"
 #include "core/state.hpp"
