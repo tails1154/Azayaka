@@ -34,6 +34,8 @@
 #include "core/settings.hpp"
 
 #include "core/accessory/printer.hpp"
+#include "core/serial/serial_device_network.hpp"
+
 
 #ifdef __APPLE__
 #define MODIFIER KMOD_GUI
@@ -52,7 +54,7 @@ int main(int argc, char **argv) {
     //RateOption rate_option; // TODO: Add this in
     ForceGbOption force_gb_option;
     ForceGbcOption force_gbc_option;
-    LinkOption link_option;
+    //LinkOption link_option;
     PrinterOption printer_option;
     DumpUsageOption dump_usage_option;
     VerboseOption verbose_option;
@@ -74,7 +76,9 @@ int main(int argc, char **argv) {
 
     for (Option *option : options)
         parser.add_option(option);
-
+    std::string link_mode = ""; // "server" or "client"
+std::string link_ip = "";
+int link_port = 0;
     std::string rom_path = "", error;
 
     for (int i = 1; i < argc; i++) {
@@ -88,10 +92,27 @@ int main(int argc, char **argv) {
         }
     }
 
+    for (int i = 1; i < argc; ++i) {
+    if (strcmp(argv[i], "--link-server") == 0 && i+2 < argc) {
+        link_mode = "server";
+        link_ip = argv[i+1];
+        link_port = atoi(argv[i+2]);
+        i += 2;
+    }
+    else if (strcmp(argv[i], "--link-client") == 0 && i+2 < argc) {
+        link_mode = "client";
+        link_ip = argv[i+1];
+        link_port = atoi(argv[i+2]);
+        i += 2;
+    }
+    // ... (rest of regular option parsing)
+}
     if (rom_path.empty()) {
         print_usage(argv[0], options);
         return -1;
     }
+
+
 
     bool force_gb   = force_gb_option.get_force_gb();
     bool force_gbc  = force_gbc_option.get_force_gbc();
@@ -185,6 +206,11 @@ int main(int argc, char **argv) {
         window.set_status_text("Debug-Mode", -1);
         window.update(gb.get_screen_buffer());
     }
+
+    if (!link_mode.empty()) {
+    SerialDevice* serdev = new SerialDeviceNetwork(link_ip, link_port, link_mode == "server");
+    gb.serial->set_serial_device(serdev);
+}
 
     while (running) {
         frame_start = SDL_GetPerformanceCounter();
